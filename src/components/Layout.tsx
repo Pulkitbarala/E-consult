@@ -31,6 +31,7 @@ const Layout = ({ children }: LayoutProps) => {
   const navItems = [
     { path: '/feed', label: 'Feed', icon: MessageSquare },
     { path: '/my-consultations', label: 'My Consultations', icon: FileText },
+    { path: '/commented', label: 'Commented', icon: BarChart3 },
   ];
 
   const saveThemePreference = (theme: string) => {

@@ -16,6 +16,7 @@ const Feed = lazy(() => import("./pages/Feed"));
 const CreateConsultation = lazy(() => import("./pages/CreateConsultation"));
 const ConsultationDetail = lazy(() => import("./pages/ConsultationDetail"));
 const MyConsultations = lazy(() => import("./pages/MyConsultations"));
+const CommentedConsultations = lazy(() => import("./pages/CommentedConsultations"));
 const Profile = lazy(() => import("./pages/Profile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -79,6 +80,7 @@ const App = () => (
                 <Route path="/create" element={<AuthGuard><CreateConsultation /></AuthGuard>} />
                 <Route path="/consultation/:id" element={<AuthGuard><ConsultationDetail /></AuthGuard>} />
                 <Route path="/my-consultations" element={<AuthGuard><MyConsultations /></AuthGuard>} />
+                <Route path="/commented" element={<AuthGuard><CommentedConsultations /></AuthGuard>} />
                 <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Clock, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Consultation {
   id: string;
@@ -23,6 +24,7 @@ interface Consultation {
 }
 
 const Feed = () => {
+  const { user } = useAuth();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -33,6 +35,19 @@ const Feed = () => {
 
   const fetchConsultations = async () => {
     try {
+      // If user is signed in, fetch consultation ids they've commented on so we can exclude them
+      let commentedIds: string[] = [];
+      if (user) {
+        const { data: userComments, error: userCommentsError } = await supabase
+          .from('comments')
+          .select('consultation_id')
+          .eq('user_id', user.id);
+
+        if (userCommentsError) throw userCommentsError;
+
+        commentedIds = [...new Set(userComments?.map((c: any) => c.consultation_id))];
+      }
+
       const { data, error } = await supabase
         .from('consultations')
         .select(`
@@ -45,7 +60,7 @@ const Feed = () => {
           user_id
         `)
         .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false });
+  .order('created_at', { ascending: false });
 
       if (error) throw error;
 
@@ -54,8 +69,14 @@ const Feed = () => {
         return;
       }
 
+      // Filter out consultations the user already commented on
+      const filtered = commentedIds.length > 0 ? data.filter((c: any) => !commentedIds.includes(c.id)) : data;
+
+      // Use filtered list (exclude ones user already commented on)
+      const consultationsData = filtered;
+
       // Get profiles for all consultation authors
-      const userIds = [...new Set(data.map(c => c.user_id))];
+      const userIds = [...new Set(consultationsData.map((c: any) => c.user_id))];
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select('user_id, display_name, avatar_url')
@@ -64,7 +85,7 @@ const Feed = () => {
       if (profileError) throw profileError;
 
       // Get comment counts for each consultation
-      const consultationIds = data.map(c => c.id);
+  const consultationIds = consultationsData.map((c: any) => c.id);
       const { data: commentCounts, error: countError } = await supabase
         .from('comments')
         .select('consultation_id')
@@ -84,7 +105,7 @@ const Feed = () => {
       }, {} as Record<string, number>) || {};
 
       // Combine all data
-      const consultationsWithData = data.map(consultation => ({
+      const consultationsWithData = consultationsData.map((consultation: any) => ({
         ...consultation,
         profiles: profileMap[consultation.user_id] || { display_name: 'Unknown User' },
         comment_count: countMap[consultation.id] || 0,
@@ -163,9 +184,9 @@ const Feed = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {consultations.map((consultation) => (
-            <Link key={consultation.id} to={`/consultation/${consultation.id}`}>
+            <Link key={consultation.id} to={`/consultation/${consultation.id}`} className="block">
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardHeader>
                   <div className="flex items-start justify-between">
