@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import Layout from "./components/Layout";
 import { useEffect, lazy, Suspense } from "react";
@@ -32,7 +32,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }
   
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    // If user is not authenticated, send them to the public home page
+    return <Navigate to="/" replace />;
   }
   
   return <Layout>{children}</Layout>;
@@ -40,13 +41,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  
+  const navigate = useNavigate();
+  const location = useLocation();
+
   useEffect(() => {
     // If user is already logged in and tries to access auth page, redirect to feed
-    if (user && window.location.pathname === '/auth') {
-      window.location.replace('/feed');
+    if (user && location.pathname === '/auth') {
+      navigate('/feed', { replace: true });
     }
-  }, [user]);
+  }, [user, location, navigate]);
   
   if (loading) {
     return (
@@ -82,7 +85,7 @@ const App = () => (
                 <Route path="/my-consultations" element={<AuthGuard><MyConsultations /></AuthGuard>} />
                 <Route path="/commented" element={<AuthGuard><CommentedConsultations /></AuthGuard>} />
                 <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
-                <Route path="*" element={<NotFound />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
           </BrowserRouter>
