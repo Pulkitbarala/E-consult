@@ -18,6 +18,7 @@ const ConsultationDetail = lazy(() => import("./pages/ConsultationDetail"));
 const MyConsultations = lazy(() => import("./pages/MyConsultations"));
 const CommentedConsultations = lazy(() => import("./pages/CommentedConsultations"));
 const Profile = lazy(() => import("./pages/Profile"));
+const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -46,6 +47,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // If user is already logged in and tries to access auth page, redirect to feed
+    // But allow access to update-password page even when authenticated
     if (user && location.pathname === '/auth') {
       navigate('/feed', { replace: true });
     }
@@ -60,7 +62,8 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
   
   // If user is logged in and trying to access auth, redirect to feed
-  if (user) {
+  // But allow access to update-password page even when authenticated
+  if (user && location.pathname !== '/update-password') {
     return <Navigate to="/feed" replace />;
   }
   
@@ -79,6 +82,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+                <Route path="/update-password" element={<PublicRoute><UpdatePassword /></PublicRoute>} />
                 <Route path="/feed" element={<AuthGuard><Feed /></AuthGuard>} />
                 <Route path="/create" element={<AuthGuard><CreateConsultation /></AuthGuard>} />
                 <Route path="/consultation/:id" element={<AuthGuard><ConsultationDetail /></AuthGuard>} />

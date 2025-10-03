@@ -1,34 +1,49 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
-import { User, Save, Camera } from 'lucide-react';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
+import { User, Save, Edit3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 const profileSchema = z.object({
-  display_name: z.string().min(2, 'Display name must be at least 2 characters').max(50, 'Display name must be less than 50 characters'),
+  display_name: z
+    .string()
+    .min(2, 'Display name must be at least 2 characters')
+    .max(50, 'Display name must be less than 50 characters'),
   bio: z.string().max(500, 'Bio must be less than 500 characters').optional(),
-  avatar_url: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
 });
 
 type ProfileForm = z.infer<typeof profileSchema>;
 
 interface UserProfile {
   id: string;
+  user_id?: string;
   display_name: string;
-  bio?: string;
-  avatar_url?: string;
+  bio?: string | null;
 }
 
-const Profile = () => {
+const Profile: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -37,20 +52,17 @@ const Profile = () => {
 
   const form = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
-    defaultValues: {
-      display_name: '',
-      bio: '',
-      avatar_url: '',
-    },
+    defaultValues: { display_name: '', bio: '' },
   });
 
   useEffect(() => {
-    if (user) {
-      fetchProfile();
-    }
+    if (user) fetchProfile();
+    else setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchProfile = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -58,264 +70,236 @@ const Profile = () => {
         .eq('user_id', user?.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
+      if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
-        setProfile(data);
-        form.reset({
-          display_name: data.display_name,
-          bio: data.bio || '',
-          avatar_url: data.avatar_url || '',
-        });
+        setProfile(data as UserProfile);
+        form.reset({ display_name: data.display_name, bio: data.bio || '' });
       }
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load profile',
-        variant: 'destructive',
-      });
+    } catch (err: any) {
+      toast({ title: 'Error', description: 'Failed to load profile', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleImageUpload = async (file: File) => {
-    if (!user) return;
-
-    const bucketName = 'avatars'; // Ensure this matches the bucket name in Supabase
-    const fileName = `${user.id}-${Date.now()}-${file.name}`;
-
-    try {
-      console.log('Uploading to bucket:', bucketName, 'File name:', fileName);
-
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(fileName, file);
-
-      if (error) {
-        console.error('Upload error:', error);
-        throw error;
-      }
-
-      const { publicUrl } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(fileName);
-
-      if (publicUrl) {
-        console.log('Public URL:', publicUrl);
-        form.setValue('avatar_url', publicUrl);
-        toast({
-          title: 'Success!',
-          description: 'Profile image uploaded successfully.',
-        });
-      } else {
-        console.error('Failed to retrieve public URL');
-      }
-    } catch (error: any) {
-      console.error('Error during image upload:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to upload image.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const onSubmit = async (data: ProfileForm) => {
-    if (!user) return;
-
+  const onSubmit = async (values: ProfileForm) => {
     setUpdating(true);
     try {
-      const profileData = {
-        user_id: user.id,
-        display_name: data.display_name,
-        bio: data.bio || null,
-        avatar_url: data.avatar_url || null,
-      };
+      const { data: authData } = await supabase.auth.getUser();
+      const currentUser = authData?.user;
+      if (!currentUser) {
+        toast({ title: 'Sign in required', description: 'Please sign in to update profile', variant: 'destructive' });
+        setUpdating(false);
+        return;
+      }
 
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(profileData, { onConflict: ['user_id'] });
+      const payload = { user_id: currentUser.id, display_name: values.display_name, bio: values.bio || null };
 
-      if (error) throw error;
+      if (profile) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ display_name: payload.display_name, bio: payload.bio })
+          .eq('user_id', currentUser.id);
+        if (error) throw error;
+        setProfile(prev => (prev ? { ...prev, ...payload } : { id: '', ...payload }));
+      } else {
+        const { error } = await supabase.from('profiles').insert(payload);
+        if (error) throw error;
+        setProfile({ id: '', ...payload });
+      }
 
-      setProfile(prev => prev ? { ...prev, ...profileData } : { id: '', ...profileData });
-
-      toast({
-        title: 'Success!',
-        description: 'Your profile has been updated.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update profile',
-        variant: 'destructive',
-      });
+      toast({ title: 'Saved', description: 'Your profile has been updated.' });
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: 'Error', description: err.message || 'Update failed', variant: 'destructive' });
     } finally {
       setUpdating(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded w-1/2 mb-6"></div>
-          <Card>
+  const initials = useMemo(() => {
+    const name = profile?.display_name || user?.email?.split('@')[0] || 'User';
+    return name
+      .split(' ')
+      .slice(0, 2)
+      .map(s => s.charAt(0).toUpperCase())
+      .join('');
+  }, [profile, user]);
+
+  return (
+    <div className="max-w-5xl mx-auto p-8 space-y-8">
+      {/* Header Section */}
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold tracking-tight">Profile Settings</h1>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Manage your personal information and how you appear to others on the platform
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Profile Overview Card */}
+        <div className="lg:col-span-1">
+          <Card className="border-l-4 border-l-primary">
             <CardHeader>
-              <div className="h-6 bg-muted rounded w-1/3"></div>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Profile Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-2xl font-bold text-primary-foreground shadow-lg">
+                  {initials}
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">
+                    {profile?.display_name || user?.email?.split('@')[0] || 'User'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {profile?.bio || 'No bio added yet. Tell people about yourself!'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Email</span>
+                    <span className="text-sm text-muted-foreground truncate max-w-[180px]">
+                      {user?.email}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Member since</span>
+                    <span className="text-sm text-muted-foreground">
+                      {user?.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Edit Profile Form */}
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Edit3 className="w-5 h-5" />
+                Edit Profile
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="h-4 bg-muted rounded w-1/4"></div>
-                <div className="h-10 bg-muted rounded"></div>
-                <div className="h-4 bg-muted rounded w-1/4"></div>
-                <div className="h-20 bg-muted rounded"></div>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="display_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Display Name</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Your display name" 
+                            className="h-12"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                        <div className="text-sm text-muted-foreground">
+                          {field.value ? `${field.value.length}/50 characters` : '0/50 characters'}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="bio"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Bio</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Tell people about yourself, your interests, expertise..." 
+                            className="min-h-[120px] resize-none"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Share something interesting about yourself. This will be visible to other users.
+                        </FormDescription>
+                        <FormMessage />
+                        <div className="text-sm text-muted-foreground">
+                          {field.value ? `${field.value.length}/500 characters` : '0/500 characters'}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex items-center gap-4 pt-4">
+                    <Button 
+                      type="submit" 
+                      disabled={updating}
+                      className="px-8 h-12"
+                    >
+                      {updating ? (
+                        'Saving...'
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Save Changes
+                        </>
+                      )}
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      onClick={() => form.reset()}
+                      className="px-6 h-12"
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+
+          {/* Live Preview */}
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader>
+              <CardTitle className="text-xl">Live Preview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
+                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-lg font-bold text-primary-foreground shadow-md">
+                  {initials}
+                </div>
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-semibold truncate">
+                      {form.watch('display_name') || profile?.display_name || user?.email?.split('@')[0] || 'User'}
+                    </h3>
+                    <span className="text-sm text-muted-foreground truncate ml-2">
+                      {user?.email}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {form.watch('bio') || profile?.bio || 'No bio added yet.'}
+                  </p>
+                  <div className="text-xs text-muted-foreground">
+                    Member since {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="text-center">
-        <User className="w-12 h-12 mx-auto mb-4 text-primary" />
-        <h1 className="text-3xl font-bold mb-2">Profile Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your public profile information
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="flex flex-col items-center space-y-4">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src={form.watch('avatar_url') || profile?.avatar_url} />
-                  <AvatarFallback className="text-2xl">
-                    {profile?.display_name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <FormField
-                  control={form.control}
-                  name="avatar_url"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Profile Image</FormLabel>
-                      <FormControl>
-                        <div className="flex space-x-2 items-center">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                handleImageUpload(e.target.files[0]);
-                              }
-                            }}
-                          />
-                          {field.value && (
-                            <Avatar className="w-12 h-12">
-                              <AvatarImage src={field.value} />
-                              <AvatarFallback>U</AvatarFallback>
-                            </Avatar>
-                          )}
-                        </div>
-                      </FormControl>
-                      <FormDescription>
-                        Upload a profile image (optional).
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="display_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Enter your display name" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      This is how your name will appear to other users
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="bio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bio</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Tell others about yourself, your expertise, or interests..."
-                        className="min-h-24"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Share a brief description about yourself (optional)
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="pt-4">
-                <Button type="submit" disabled={updating} className="w-full">
-                  {updating ? (
-                    'Updating...'
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Email</label>
-              <p className="text-sm">{user?.email}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Account Created</label>
-              <p className="text-sm">
-                {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

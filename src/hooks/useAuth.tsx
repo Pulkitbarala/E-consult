@@ -107,8 +107,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string, displayName: string) => {
     try {
       setLoading(true);
-      const redirectUrl = `${window.location.origin}/`;
-      
+      // Use an environment variable for the auth redirect so we can point
+      // to the production Vercel domain (set VITE_AUTH_REDIRECT in Vercel or .env)
+      const redirectUrl = (import.meta.env.VITE_AUTH_REDIRECT as string) || `${window.location.origin}/auth`;
+
       const { error } = await supabase.auth.signUp({
         email,
         password,

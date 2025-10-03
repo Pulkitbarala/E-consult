@@ -93,46 +93,54 @@ const CreateConsultation = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-      </div>
-      <div className="text-center mb-8">
-        <FileText className="w-12 h-12 mx-auto mb-4 text-primary" />
-        <h1 className="text-3xl font-bold mb-2">Create New Consultation</h1>
-        <p className="text-muted-foreground">
-          Share your question or challenge with the community
-        </p>
+    <div className="max-w-5xl mx-auto space-y-8">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold">Create New Consultation</h1>
+            <p className="text-lg text-muted-foreground">
+              Share your question or challenge with the community and get expert insights
+            </p>
+          </div>
+        </div>
+        <div className="hidden md:flex items-center gap-3">
+          <FileText className="w-12 h-12 text-primary opacity-80" />
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Consultation Details</CardTitle>
-          <CardDescription>
+      <Card className="border-l-4 border-l-primary">
+        <CardHeader className="pb-6">
+          <CardTitle className="text-2xl font-bold">Consultation Details</CardTitle>
+          <CardDescription className="text-base text-muted-foreground">
             Provide clear and detailed information to get the best responses from the community
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel className="text-base font-semibold">Title</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="Enter a clear, descriptive title for your consultation" 
+                        className="text-base py-3"
                         {...field} 
                       />
                     </FormControl>
-                    <FormDescription>
-                      A good title helps others understand your consultation at a glance
-                    </FormDescription>
+                    <div className="flex justify-between items-center mt-2">
+                      <FormDescription className="text-sm">
+                        A good title helps others understand your consultation at a glance
+                      </FormDescription>
+                      <span className="text-sm text-muted-foreground font-medium">{field.value?.length ?? 0}/200</span>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -143,103 +151,108 @@ const CreateConsultation = () => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel className="text-base font-semibold">Description</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Provide detailed context, background information, and specific questions you'd like answered..."
-                        className="min-h-32"
+                        className="min-h-40 text-base resize-none"
                         {...field} 
                       />
                     </FormControl>
-                    <FormDescription>
-                      Include relevant details, constraints, and what kind of advice you're seeking
-                    </FormDescription>
+                    <div className="flex justify-between items-center mt-2">
+                      <FormDescription className="text-sm">
+                        Include relevant details, constraints, and what kind of advice you're seeking
+                      </FormDescription>
+                      <span className="text-sm text-muted-foreground font-medium">{field.value?.length ?? 0}/2000</span>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Choose the category that best matches your consultation topic
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="expires_at"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Expiry Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">Category</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick an expiry date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
+                          <SelectTrigger className="text-base py-3">
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
                         </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormDescription>
-                      Your consultation will be visible to others until this date
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription className="text-sm">
+                        Choose the category that best matches your consultation topic
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <div className="flex gap-4 pt-4">
+                <FormField
+                  control={form.control}
+                  name="expires_at"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="text-base font-semibold">Expiry Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal text-base py-3",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick an expiry date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription className="text-sm">
+                        Your consultation will be visible to others until this date
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex gap-4 pt-6">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => navigate('/feed')}
-                  className="flex-1"
+                  className="flex-1 py-3 text-base"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading} className="flex-1">
+                <Button type="submit" disabled={loading} className="flex-1 btn-primary-gradient py-3 text-base font-semibold">
                   {loading ? 'Creating...' : 'Create Consultation'}
                 </Button>
               </div>
