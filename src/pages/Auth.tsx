@@ -251,6 +251,10 @@ const Auth = () => {
     setIsResetPassword(false);
     setIsSignUp(false);
     setIsSettingNewPassword(false);
+    // Always ensure we stay on the auth page when going back
+    if (location.pathname !== '/auth') {
+      navigate('/auth', { replace: true });
+    }
     // Clear URL params if returning from password reset
     if (location.search.includes('reset=true')) {
       navigate('/auth', { replace: true });
@@ -266,50 +270,55 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-950 relative overflow-hidden">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 relative overflow-hidden">
+      {/* Subtle Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-indigo-500/20 dark:from-blue-600/10 dark:to-indigo-700/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-r from-purple-400/20 to-pink-500/20 dark:from-purple-600/10 dark:to-pink-700/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-violet-400/15 to-purple-500/15 dark:from-violet-600/8 dark:to-purple-700/8 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-r from-blue-100/30 to-indigo-100/30 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-r from-purple-100/30 to-pink-100/30 dark:from-purple-900/10 dark:to-pink-900/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       {/* Header */}
-      <header className="relative z-10 w-full py-6 px-8 flex justify-between items-center">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/')} 
-          className="flex items-center space-x-2 text-base font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
-        </Button>
+      <header className="relative z-10 w-full py-6 px-6 flex justify-between items-center">
+        {!isResetPassword && (
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/')} 
+            className="flex items-center space-x-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </Button>
+        )}
         
-        <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
-            <MessageSquare className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-          E-consult
-          </span>
-        </div>
+        {/* Spacer to maintain layout when back button is hidden */}
+        {isResetPassword && <div></div>}
         
         <ThemeToggle />
       </header>
 
       {/* Main Auth Container */}
-      <div className="relative z-10 flex-1 flex items-center justify-center p-8 min-h-[calc(100vh-120px)]">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-6 min-h-[calc(100vh-120px)]">
+        {/* Centered E-consult Logo */}
+        <div className="flex items-center space-x-3 mb-8">
+          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
+            <MessageSquare className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            E-consult
+          </span>
+        </div>
+        
         <div className="w-full max-w-md">
-          <Card className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-2xl">
-            <CardHeader className="text-center space-y-6 pb-8">
+          <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+            <CardHeader className="text-center space-y-4 pb-6">
               {/* Mode Toggle Tabs - Hide during password reset or new password setting */}
               {!isResetPassword && !isSettingNewPassword && (
                 <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1 mb-4">
                   <button
                     onClick={() => setIsSignUp(false)}
-                    className={`flex-1 py-3 px-4 rounded-md text-sm font-semibold transition-all duration-300 ${
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 ${
                       !isSignUp 
-                        ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-md' 
+                        ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm' 
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                     }`}
                   >
@@ -317,9 +326,9 @@ const Auth = () => {
                   </button>
                   <button
                     onClick={() => setIsSignUp(true)}
-                    className={`flex-1 py-3 px-4 rounded-md text-sm font-semibold transition-all duration-300 ${
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 ${
                       isSignUp 
-                        ? 'bg-white dark:bg-slate-600 text-purple-600 dark:text-purple-400 shadow-md' 
+                        ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm' 
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                     }`}
                   >
@@ -329,32 +338,32 @@ const Auth = () => {
               )}
 
               {/* Icon and Title */}
-              <div className="flex flex-col items-center space-y-4">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${
+              <div className="flex flex-col items-center space-y-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 ${
                   isSettingNewPassword
-                    ? 'bg-gradient-to-br from-orange-500 to-red-600 dark:from-orange-600 dark:to-red-700'
+                    ? 'bg-orange-100 dark:bg-orange-900/20'
                     : isResetPassword
-                      ? 'bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700'
+                      ? 'bg-green-100 dark:bg-green-900/20'
                       : isSignUp 
-                        ? 'bg-gradient-to-br from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700' 
-                        : 'bg-gradient-to-br from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700'
+                        ? 'bg-blue-100 dark:bg-blue-900/20' 
+                        : 'bg-indigo-100 dark:bg-indigo-900/20'
                 }`}>
                   {isSettingNewPassword ? (
-                    <Lock className="w-8 h-8 text-white" />
+                    <Lock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                   ) : isResetPassword ? (
-                    <Mail className="w-8 h-8 text-white" />
+                    <Mail className="w-6 h-6 text-green-600 dark:text-green-400" />
                   ) : isSignUp ? (
-                    <Sparkles className="w-8 h-8 text-white" />
+                    <Sparkles className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                   ) : (
-                    <User className="w-8 h-8 text-white" />
+                    <User className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                   )}
                 </div>
                 
-                <div className="space-y-2">
-                  <CardTitle className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                     {isSettingNewPassword ? 'Set New Password' : isResetPassword ? 'Reset Password' : isSignUp ? 'Create Account' : 'Welcome Back'}
                   </CardTitle>
-                  <CardDescription className="text-base text-slate-600 dark:text-slate-400">
+                  <CardDescription className="text-sm text-slate-600 dark:text-slate-400">
                     {isSettingNewPassword
                       ? 'Enter your new password below'
                       : isResetPassword
@@ -367,26 +376,26 @@ const Auth = () => {
               </div>
             </CardHeader>
             
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-6">
               {isSettingNewPassword ? (
                 /* New Password Form */
                 <Form {...newPasswordForm}>
-                  <form onSubmit={newPasswordForm.handleSubmit(onSetNewPassword)} className="space-y-6">
+                  <form onSubmit={newPasswordForm.handleSubmit(onSetNewPassword)} className="space-y-4">
                     <FormField
                       control={newPasswordForm.control}
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <FormLabel className="text-xs font-medium text-slate-700 dark:text-slate-300">
                             New Password
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                               <Input 
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Enter your new password"
-                                className="pl-12 pr-12 h-11 bg-white/70 dark:bg-slate-700/70 border-slate-300 dark:border-slate-600 focus:border-orange-500 dark:focus:border-orange-400 focus:ring-orange-500/20 dark:focus:ring-orange-400/20 transition-all"
+                                className="pl-10 pr-10 h-9 text-sm border-slate-300 dark:border-slate-600 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all"
                                 {...field} 
                               />
                               <button
@@ -395,9 +404,9 @@ const Auth = () => {
                                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                               >
                                 {showPassword ? (
-                                  <EyeOff className="w-5 h-5" />
+                                  <EyeOff className="w-4 h-4" />
                                 ) : (
-                                  <Eye className="w-5 h-5" />
+                                  <Eye className="w-4 h-4" />
                                 )}
                               </button>
                             </div>
@@ -412,16 +421,16 @@ const Auth = () => {
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <FormLabel className="text-xs font-medium text-slate-700 dark:text-slate-300">
                             Confirm New Password
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                               <Input 
                                 type={showConfirmPassword ? "text" : "password"}
                                 placeholder="Confirm your new password"
-                                className="pl-12 pr-12 h-11 bg-white/70 dark:bg-slate-700/70 border-slate-300 dark:border-slate-600 focus:border-orange-500 dark:focus:border-orange-400 focus:ring-orange-500/20 dark:focus:ring-orange-400/20 transition-all"
+                                className="pl-10 pr-10 h-9 text-sm border-slate-300 dark:border-slate-600 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all"
                                 {...field} 
                               />
                               <button
@@ -430,9 +439,9 @@ const Auth = () => {
                                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                               >
                                 {showConfirmPassword ? (
-                                  <EyeOff className="w-5 h-5" />
+                                  <EyeOff className="w-4 h-4" />
                                 ) : (
-                                  <Eye className="w-5 h-5" />
+                                  <Eye className="w-4 h-4" />
                                 )}
                               </button>
                             </div>
@@ -444,7 +453,7 @@ const Auth = () => {
                     
                     <Button 
                       type="submit" 
-                      className="w-full h-11 text-base font-semibold text-white hover:scale-105 transition-all duration-300 shadow-lg bg-gradient-to-r from-orange-600 to-red-600 dark:from-orange-500 dark:to-red-500 hover:from-orange-700 hover:to-red-700" 
+                      className="w-full h-9 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white transition-colors" 
                       disabled={loading}
                     >
                       {loading ? (
@@ -460,22 +469,34 @@ const Auth = () => {
                 </Form>
               ) : isResetPassword ? (
                 /* Password Reset Form */
-                <Form {...resetForm}>
-                  <form onSubmit={resetForm.handleSubmit(onResetPassword)} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={handleBackToSignIn}
+                      className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100">Go back</h3>
+                  </div>
+                  <Form {...resetForm}>
+                    <form onSubmit={resetForm.handleSubmit(onResetPassword)} className="space-y-4">
                     <FormField
                       control={resetForm.control}
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <FormLabel className="text-xs font-medium text-slate-700 dark:text-slate-300">
                             Email Address
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                               <Input 
                                 placeholder="Enter your email"
-                                className="pl-12 h-11 bg-white/70 dark:bg-slate-700/70 border-slate-300 dark:border-slate-600 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500/20 dark:focus:ring-emerald-400/20 transition-all"
+                                className="pl-10 h-9 text-sm border-slate-300 dark:border-slate-600 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all"
                                 {...field} 
                               />
                             </div>
@@ -487,7 +508,7 @@ const Auth = () => {
                     
                     <Button 
                       type="submit" 
-                      className="w-full h-11 text-base font-semibold text-white hover:scale-105 transition-all duration-300 shadow-lg bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-500 dark:to-teal-500 hover:from-emerald-700 hover:to-teal-700" 
+                      className="w-full h-9 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white transition-colors" 
                       disabled={loading}
                     >
                       {loading ? (
@@ -504,25 +525,26 @@ const Auth = () => {
                     </Button>
                   </form>
                 </Form>
+                </div>
               ) : (
                 /* Sign In / Sign Up Form */
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(isSignUp ? onSignUp : onSignIn)} className="space-y-6">
+                  <form onSubmit={form.handleSubmit(isSignUp ? onSignUp : onSignIn)} className="space-y-4">
                   {isSignUp && (
                     <FormField
                       control={form.control}
                       name="displayName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <FormLabel className="text-xs font-medium text-slate-700 dark:text-slate-300">
                             Display Name
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                               <Input 
                                 placeholder="Enter your display name"
-                                className="pl-12 h-11 bg-white/70 dark:bg-slate-700/70 border-slate-300 dark:border-slate-600 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 transition-all"
+                                className="pl-10 h-9 text-sm border-slate-300 dark:border-slate-600 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all"
                                 {...field} 
                               />
                             </div>
@@ -538,19 +560,15 @@ const Auth = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <FormLabel className="text-xs font-medium text-slate-700 dark:text-slate-300">
                           Email Address
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input 
                               placeholder="Enter your email"
-                              className={`pl-12 h-11 bg-white/70 dark:bg-slate-700/70 border-slate-300 dark:border-slate-600 transition-all ${
-                                isSignUp 
-                                  ? 'focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20 dark:focus:ring-purple-400/20' 
-                                  : 'focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20'
-                              }`}
+                              className="pl-10 h-9 text-sm border-slate-300 dark:border-slate-600 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all"
                               {...field} 
                             />
                           </div>
@@ -565,20 +583,16 @@ const Auth = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <FormLabel className="text-xs font-medium text-slate-700 dark:text-slate-300">
                           Password
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input 
                               type={showPassword ? "text" : "password"}
                               placeholder="Enter your password"
-                              className={`pl-12 pr-12 h-11 bg-white/70 dark:bg-slate-700/70 border-slate-300 dark:border-slate-600 transition-all ${
-                                isSignUp 
-                                  ? 'focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20 dark:focus:ring-purple-400/20' 
-                                  : 'focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20'
-                              }`}
+                              className="pl-10 pr-10 h-9 text-sm border-slate-300 dark:border-slate-600 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all"
                               {...field} 
                             />
                             <button
@@ -587,9 +601,9 @@ const Auth = () => {
                               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                             >
                               {showPassword ? (
-                                <EyeOff className="w-5 h-5" />
+                                <EyeOff className="w-4 h-4" />
                               ) : (
-                                <Eye className="w-5 h-5" />
+                                <Eye className="w-4 h-4" />
                               )}
                             </button>
                           </div>
@@ -605,7 +619,7 @@ const Auth = () => {
                       <button
                         type="button"
                         onClick={handleShowResetPassword}
-                        className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors font-medium"
+                        className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
                       >
                         Forgot password?
                       </button>
@@ -614,11 +628,7 @@ const Auth = () => {
                   
                   <Button 
                     type="submit" 
-                    className={`w-full h-11 text-base font-semibold text-white hover:scale-105 transition-all duration-300 shadow-lg ${
-                      isSignUp 
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 hover:from-purple-700 hover:to-pink-700' 
-                        : 'bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-indigo-500 dark:to-blue-500 hover:from-indigo-700 hover:to-blue-700'
-                    }`} 
+                    className="w-full h-9 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white transition-colors" 
                     disabled={loading}
                   >
                     {loading ? (
@@ -633,45 +643,6 @@ const Auth = () => {
                 </form>
               </Form>
               )}
-              
-              {/* Footer section */}
-              <div className="text-center pt-4 border-t border-slate-200 dark:border-slate-700">
-                {isSettingNewPassword ? (
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Having trouble?{' '}
-                    <button 
-                      onClick={handleBackToSignIn}
-                      className="font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
-                    >
-                      Back to sign in
-                    </button>
-                  </p>
-                ) : isResetPassword ? (
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Remember your password?{' '}
-                    <button 
-                      onClick={handleBackToSignIn}
-                      className="font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
-                    >
-                      Back to sign in
-                    </button>
-                  </p>
-                ) : (
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {isSignUp ? "Already have an account?" : "Don't have an account?"}{' '}
-                    <button 
-                      onClick={handleToggleMode}
-                      className={`font-semibold transition-colors ${
-                        isSignUp 
-                          ? 'text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300' 
-                          : 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300'
-                      }`}
-                    >
-                      {isSignUp ? 'Sign in here' : 'Create account'}
-                    </button>
-                  </p>
-                )}
-              </div>
             </CardContent>
           </Card>
         </div>

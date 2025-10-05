@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Form,
   FormControl,
@@ -21,7 +22,7 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
-import { User, Save, Edit3 } from 'lucide-react';
+import { MessageSquare, Activity, MessageCircle, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -29,8 +30,8 @@ import { useToast } from '@/hooks/use-toast';
 const profileSchema = z.object({
   display_name: z
     .string()
-    .min(2, 'Display name must be at least 2 characters')
-    .max(50, 'Display name must be less than 50 characters'),
+    .min(2, 'Username must be at least 2 characters')
+    .max(50, 'Username must be less than 50 characters'),
   bio: z.string().max(500, 'Bio must be less than 500 characters').optional(),
 });
 
@@ -43,11 +44,19 @@ interface UserProfile {
   bio?: string | null;
 }
 
+interface UserStats {
+  totalConsultations: number;
+  activeNow: number;
+  commentsPosted: number;
+}
+
 const Profile: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
   const form = useForm<ProfileForm>({
@@ -56,13 +65,18 @@ const Profile: React.FC = () => {
   });
 
   useEffect(() => {
-    if (user) fetchProfile();
-    else setLoading(false);
+    if (user) {
+      // Fetch profile and stats in parallel for faster loading
+      Promise.all([fetchProfile(), fetchUserStats()]).then(() => {
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchProfile = async () => {
-    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -78,8 +92,44 @@ const Profile: React.FC = () => {
       }
     } catch (err: any) {
       toast({ title: 'Error', description: 'Failed to load profile', variant: 'destructive' });
+    }
+  };
+
+  const fetchUserStats = async () => {
+    setStatsLoading(true);
+    try {
+      // Use Promise.all to fetch all stats in parallel for faster loading
+      const [consultationsResult, activeResult, commentsResult] = await Promise.all([
+        supabase
+          .from('consultations')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user?.id),
+        supabase
+          .from('consultations')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user?.id)
+          .eq('status', 'active'),
+        supabase
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user?.id)
+      ]);
+
+      setStats({
+        totalConsultations: consultationsResult.count || 0,
+        activeNow: activeResult.count || 0,
+        commentsPosted: commentsResult.count || 0,
+      });
+    } catch (err: any) {
+      console.error('Failed to fetch user stats:', err);
+      // Set to zeros if fetching fails
+      setStats({
+        totalConsultations: 0,
+        activeNow: 0,
+        commentsPosted: 0,
+      });
     } finally {
-      setLoading(false);
+      setStatsLoading(false);
     }
   };
 
@@ -128,178 +178,171 @@ const Profile: React.FC = () => {
   }, [profile, user]);
 
   return (
-    <div className="max-w-5xl mx-auto p-8 space-y-8">
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
       {/* Header Section */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">Profile Settings</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Manage your personal information and how you appear to others on the platform
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Profile</h1>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Manage your account settings and view your activity
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Profile Overview Card */}
-        <div className="lg:col-span-1">
-          <Card className="border-l-4 border-l-primary">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Profile Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-2xl font-bold text-primary-foreground shadow-lg">
-                  {initials}
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">
-                    {profile?.display_name || user?.email?.split('@')[0] || 'User'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {profile?.bio || 'No bio added yet. Tell people about yourself!'}
+      {/* Stats Cards Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Total Consultations */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                <MessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                  Total Consultations
+                </p>
+                {statsLoading ? (
+                  <Skeleton className="h-6 w-8" />
+                ) : (
+                  <p className="text-lg font-semibold text-slate-900 dark:text-white">
+                    {stats?.totalConsultations ?? 0}
                   </p>
-                </div>
+                )}
               </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              <div className="space-y-4 pt-4 border-t">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Email</span>
-                    <span className="text-sm text-muted-foreground truncate max-w-[180px]">
-                      {user?.email}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Member since</span>
-                    <span className="text-sm text-muted-foreground">
-                      {user?.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
-                    </span>
-                  </div>
-                </div>
+        {/* Active Now */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                <Activity className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Edit Profile Form */}
-          <Card className="border-l-4 border-l-primary">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-2">
-                <Edit3 className="w-5 h-5" />
-                Edit Profile
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="display_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Display Name</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Your display name" 
-                            className="h-12"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                        <div className="text-sm text-muted-foreground">
-                          {field.value ? `${field.value.length}/50 characters` : '0/50 characters'}
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="bio"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Bio</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Tell people about yourself, your interests, expertise..." 
-                            className="min-h-[120px] resize-none"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Share something interesting about yourself. This will be visible to other users.
-                        </FormDescription>
-                        <FormMessage />
-                        <div className="text-sm text-muted-foreground">
-                          {field.value ? `${field.value.length}/500 characters` : '0/500 characters'}
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex items-center gap-4 pt-4">
-                    <Button 
-                      type="submit" 
-                      disabled={updating}
-                      className="px-8 h-12"
-                    >
-                      {updating ? (
-                        'Saving...'
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          Save Changes
-                        </>
-                      )}
-                    </Button>
-                    <Button 
-                      type="button"
-                      variant="outline" 
-                      onClick={() => form.reset()}
-                      className="px-6 h-12"
-                    >
-                      Reset
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-
-          {/* Live Preview */}
-          <Card className="border-l-4 border-l-primary">
-            <CardHeader>
-              <CardTitle className="text-xl">Live Preview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
-                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-lg font-bold text-primary-foreground shadow-md">
-                  {initials}
-                </div>
-                <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold truncate">
-                      {form.watch('display_name') || profile?.display_name || user?.email?.split('@')[0] || 'User'}
-                    </h3>
-                    <span className="text-sm text-muted-foreground truncate ml-2">
-                      {user?.email}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {form.watch('bio') || profile?.bio || 'No bio added yet.'}
+              <div>
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                  Active Now
+                </p>
+                {statsLoading ? (
+                  <Skeleton className="h-6 w-8" />
+                ) : (
+                  <p className="text-lg font-semibold text-slate-900 dark:text-white">
+                    {stats?.activeNow ?? 0}
                   </p>
-                  <div className="text-xs text-muted-foreground">
-                    Member since {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
-                  </div>
-                </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Comments Posted */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-cyan-100 dark:bg-cyan-900/20 rounded-lg">
+                <MessageCircle className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                  Comments Posted
+                </p>
+                {statsLoading ? (
+                  <Skeleton className="h-6 w-8" />
+                ) : (
+                  <p className="text-lg font-semibold text-slate-900 dark:text-white">
+                    {stats?.commentsPosted ?? 0}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Edit Profile Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium">Edit Profile</CardTitle>
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            Update your profile information
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* User Info Display */}
+          <div className="flex items-center space-x-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+            <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-base font-medium text-slate-600 dark:text-slate-300">
+              {initials}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-slate-900 dark:text-white">
+                {user?.email}
+              </p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Member since {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown'}
+              </p>
+            </div>
+          </div>
+
+          {/* Form */}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="display_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium">Username</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter your username"
+                        className="h-9 text-sm"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium">Bio</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Tell us about yourself..."
+                        className="min-h-[80px] resize-none text-sm"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormDescription className="text-xs text-slate-500">
+                      {field.value ? `${field.value.length}/500 characters` : '0/500 characters'}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button 
+                type="submit" 
+                disabled={updating}
+                className="w-auto px-4 h-9 text-sm"
+              >
+                {updating ? (
+                  'Saving...'
+                ) : (
+                  <>
+                    <Save className="w-3 h-3 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

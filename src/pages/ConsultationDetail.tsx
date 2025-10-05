@@ -133,7 +133,7 @@ const ConsultationDetail = () => {
         description: 'Failed to load consultation',
         variant: 'destructive',
       });
-      navigate('/feed');
+      window.history.back();
     }
   };
 
@@ -319,6 +319,14 @@ const ConsultationDetail = () => {
 
       setConsultation({ ...consultation, title: editedTitle, description: editedDescription });
       setIsEditing(false);
+      
+      // Remove edit parameter from URL after successful save
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('edit');
+      const newUrl = newSearchParams.toString() ? 
+        `/consultation/${id}?${newSearchParams.toString()}` : 
+        `/consultation/${id}`;
+      navigate(newUrl, { replace: true });
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -586,11 +594,11 @@ const ConsultationDetail = () => {
   const showEditButton = searchParams.get('edit') === 'true';
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/feed')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Feed
+    <div className="max-w-4xl mx-auto space-y-6 p-4">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={() => window.history.back()} className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          <span className="text-xs">Back</span>
         </Button>
       </div>
 
@@ -600,20 +608,20 @@ const ConsultationDetail = () => {
             {isEditing ? (
               <>
                 <input
-                  className="w-full border rounded-md p-3 text-lg font-semibold"
+                  className="w-full border border-slate-300 dark:border-slate-600 rounded-md p-2 text-sm font-semibold bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                   value={editedTitle}
                   onChange={(e) => setEditedTitle(e.target.value)}
                   placeholder="Consultation title"
                 />
                 <textarea
-                  className="w-full border rounded-md p-3 min-h-32"
+                  className="w-full border border-slate-300 dark:border-slate-600 rounded-md p-2 min-h-28 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                   value={editedDescription}
                   onChange={(e) => setEditedDescription(e.target.value)}
                   placeholder="Describe your consultation..."
                 />
-                <div className="flex gap-3 pt-2">
-                  <Button onClick={handleEdit} className="btn-primary-gradient">Save Changes</Button>
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
+                <div className="flex gap-2 pt-2">
+                  <Button onClick={handleEdit} size="sm" className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-slate-200 dark:text-slate-900">Save Changes</Button>
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} className="border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
                     Cancel
                   </Button>
                 </div>
@@ -621,17 +629,19 @@ const ConsultationDetail = () => {
             ) : (
               <>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="secondary" className="text-sm">{consultation.category}</Badge>
-                    {isExpired && <Badge variant="destructive">Expired</Badge>}
-                    {isOwner && <Badge variant="outline">Your Consultation</Badge>}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {consultation.category.split(', ').map((cat, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs px-2 py-1">{cat}</Badge>
+                    ))}
+                    {isExpired && <Badge variant="destructive" className="text-xs px-2 py-1">Expired</Badge>}
+                    {isOwner && <Badge variant="outline" className="text-xs px-2 py-1">Your Consultation</Badge>}
                   </div>
-                  <div className="text-sm text-muted-foreground font-medium">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                     {getTimeLeft(consultation.expires_at)}
                   </div>
                 </div>
                 
-                <CardTitle className="text-3xl font-bold leading-tight text-foreground">
+                <CardTitle className="text-2xl font-bold leading-tight text-slate-900 dark:text-slate-100">
                   {consultation.title}
                 </CardTitle>
                 
@@ -639,13 +649,13 @@ const ConsultationDetail = () => {
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-8 h-8">
                       <AvatarImage src={consultation.profiles?.avatar_url} />
-                      <AvatarFallback className="text-sm">
+                      <AvatarFallback className="text-xs">
                         {consultation.profiles?.display_name?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="font-medium text-sm">{consultation.profiles?.display_name}</div>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <div className="font-medium text-xs text-slate-700 dark:text-slate-300">{consultation.profiles?.display_name}</div>
+                      <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                         <Clock className="w-3 h-3" />
                         {formatDistanceToNow(new Date(consultation.created_at), { addSuffix: true })}
                       </div>
@@ -654,15 +664,15 @@ const ConsultationDetail = () => {
                   
                   <div className="flex gap-2">
                     {isOwner && showEditButton && !isExpired && (
-                      <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
+                      <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <Edit className="w-3 h-3 mr-1" />
+                        <span className="text-xs">Edit</span>
                       </Button>
                     )}
                     {isOwner && !isExpired && (
-                      <Button variant="outline" size="sm" onClick={handleExpire} className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                        <X className="w-4 h-4 mr-2" />
-                        Expire
+                      <Button variant="outline" size="sm" onClick={handleExpire} className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 border-red-300 dark:border-red-700">
+                        <X className="w-3 h-3 mr-1" />
+                        <span className="text-xs">Expire</span>
                       </Button>
                     )}
                   </div>
@@ -674,7 +684,7 @@ const ConsultationDetail = () => {
         <CardContent className="pt-0">
           {!isEditing && (
             <div className="prose prose-sm max-w-none">
-              <p className="text-foreground whitespace-pre-wrap leading-relaxed text-base">
+              <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed text-sm">
                 {consultation.description}
               </p>
             </div>
@@ -684,8 +694,8 @@ const ConsultationDetail = () => {
 
       <div className="space-y-6">
         <div className="flex items-center justify-between border-b pb-4">
-          <h2 className="text-2xl font-bold flex items-center gap-3">
-            <MessageSquare className="w-6 h-6" />
+          <h2 className="text-lg font-bold flex items-center gap-3 text-slate-900 dark:text-slate-100">
+            <MessageSquare className="w-5 h-5" />
             Comments ({comments.length})
           </h2>
         </div>
@@ -706,15 +716,15 @@ const ConsultationDetail = () => {
                   placeholder="Share your thoughts, advice, or questions..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  className="min-h-28 resize-none"
+                  className="min-h-24 resize-none text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                   disabled={submitting}
                 />
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={!newComment.trim() || submitting} className="btn-primary-gradient">
-                    {submitting ? 'Posting...' : (
+                  <Button type="submit" disabled={!newComment.trim() || submitting} size="sm" className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-slate-200 dark:text-slate-900">
+                    {submitting ? <span className="text-xs">Posting...</span> : (
                       <>
-                        <Send className="w-4 h-4 mr-2" />
-                        Post Comment
+                        <Send className="w-3 h-3 mr-1" />
+                        <span className="text-xs">Post Comment</span>
                       </>
                     )}
                   </Button>
@@ -729,8 +739,8 @@ const ConsultationDetail = () => {
             <Card className="text-center py-12">
               <CardContent>
                 <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-lg font-semibold mb-2">No comments yet</h3>
-                <p className="text-muted-foreground max-w-md mx-auto">
+                <h3 className="text-base font-semibold mb-2 text-slate-900 dark:text-slate-100">No comments yet</h3>
+                <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto text-sm">
                   {isExpired 
                     ? "This consultation has expired and cannot receive new comments."
                     : "Be the first to share your thoughts and help with this consultation!"
@@ -748,20 +758,20 @@ const ConsultationDetail = () => {
                         <div className="flex items-center space-x-3">
                           <Avatar className="w-10 h-10">
                             <AvatarImage src={comment.profiles?.avatar_url} />
-                            <AvatarFallback className="text-sm">
+                            <AvatarFallback className="text-xs">
                               {comment.profiles?.display_name?.charAt(0) || 'U'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-sm">
+                              <span className="font-semibold text-xs text-slate-900 dark:text-slate-100">
                                 {comment.profiles?.display_name}
                               </span>
                               {comment.user_id === consultation.user_id && (
                                 <Badge variant="outline" className="text-xs">Author</Badge>
                               )}
                             </div>
-                            <div className="text-xs text-muted-foreground">
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
                               {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                             </div>
                           </div>
@@ -769,7 +779,7 @@ const ConsultationDetail = () => {
                         
                         <div className="flex items-center gap-3">
                           <button 
-                            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors" 
+                            className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors" 
                             onClick={() => toggleLike(comment.id)}
                           >
                             <Heart className={`w-4 h-4 ${comment.liked_by_user ? 'fill-destructive text-destructive' : ''}`} />
@@ -801,16 +811,16 @@ const ConsultationDetail = () => {
                           <Textarea
                             value={editingCommentContent}
                             onChange={(e) => setEditingCommentContent(e.target.value)}
-                            className="min-h-24"
+                            className="min-h-20 text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                           />
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={() => saveEditComment(comment.id)}>Save</Button>
-                            <Button size="sm" variant="outline" onClick={cancelEditComment}>Cancel</Button>
+                            <Button size="sm" onClick={() => saveEditComment(comment.id)} className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-slate-200 dark:text-slate-900 text-xs">Save</Button>
+                            <Button size="sm" variant="outline" onClick={cancelEditComment} className="border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs">Cancel</Button>
                           </div>
                         </div>
                       ) : (
                         <div className="pl-13">
-                          <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                          <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
                             {comment.content}
                           </p>
                         </div>

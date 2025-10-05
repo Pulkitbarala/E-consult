@@ -68,62 +68,74 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 relative overflow-hidden">
-      {/* Enhanced Animated Background Elements */}
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 relative overflow-hidden">
+      {/* Subtle Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-r from-blue-300 to-indigo-400 dark:from-blue-800 dark:to-indigo-900 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-r from-green-300 to-teal-400 dark:from-green-800 dark:to-teal-900 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-pink-300 to-purple-400 dark:from-pink-800 dark:to-purple-900 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-r from-blue-100/50 to-indigo-100/50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-r from-green-100/50 to-teal-100/50 dark:from-green-900/20 dark:to-teal-900/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-purple-100/50 to-pink-100/50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      {/* Updated Fonts and Colors */}
-      <header className="relative z-10 container mx-auto px-4 py-6 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <div className="w-10 h-10 bg-gradient-to-r from-indigo-400 to-indigo-500 dark:from-indigo-700 dark:to-indigo-800 rounded-lg flex items-center justify-center">
-            <MessageSquare className="w-6 h-6 text-white" />
+      {/* Header */}
+      <header className="relative z-10 container mx-auto px-6 py-6 flex justify-between items-center">
+        <div className="flex items-center space-x-3">
+          <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
+            <MessageSquare className="w-5 h-5 text-white" />
           </div>
-          <span className="text-2xl font-extrabold tracking-wide text-indigo-600 dark:text-indigo-300">E-Consult</span>
+          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">E-Consult</span>
         </div>
         <div className="flex items-center space-x-4">
           <ThemeToggle />
-          <Button variant="ghost" onClick={() => navigate('/auth')} className="text-lg font-medium text-gray-700 dark:text-gray-300">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/auth')} 
+            className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+          >
             Sign In
           </Button>
-          <Button onClick={() => navigate('/auth')} className="px-6 py-3 text-lg font-semibold bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 text-white hover:scale-105 transition-transform">
+          <Button 
+            onClick={() => navigate('/auth')} 
+            className="px-4 h-9 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white transition-colors"
+          >
             Get Started
           </Button>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative z-10 container mx-auto px-4 py-20 text-center">
+      <section className="relative z-10 container mx-auto px-6 py-16 text-center">
         <div className="max-w-4xl mx-auto">
-          <Badge variant="secondary" className="mb-6 animate-fade-in bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-            <Sparkles className="w-5 h-5 mr-2" />
+          <Badge variant="secondary" className="mb-6 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">
+            <Sparkles className="w-4 h-4 mr-2" />
             Trusted by 10,000+ professionals
           </Badge>
 
-          <h1 className="text-6xl md:text-8xl font-extrabold mb-8 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 dark:from-blue-700 dark:via-indigo-700 dark:to-purple-800 bg-clip-text text-transparent animate-fade-in-up">
-            Connect. Consult. Collaborate.
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-slate-100 leading-tight">
+            Connect. Consult.{" "}
+            <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+              Collaborate.
+            </span>
           </h1>
 
-          <p className="text-2xl md:text-3xl text-gray-700 dark:text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-up delay-200">
+          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-8 max-w-3xl mx-auto leading-relaxed">
             Join the world's most trusted platform for professional consultations. 
             Get expert advice, share knowledge, and make informed decisions together.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-in-up delay-300">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
             <Button 
               size="lg" 
               onClick={() => navigate('/auth')} 
-              className="px-10 py-5 text-xl font-bold bg-gradient-to-r from-green-400 to-blue-500 dark:from-green-700 dark:to-blue-800 text-white hover:scale-110 transition-transform">
-              Get Started
+              className="px-6 h-11 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white transition-colors"
+            >
+              Get Started Free
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
               onClick={() => navigate('/auth')} 
-              className="px-10 py-5 text-xl font-bold text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 hover:scale-110 transition-transform">
+              className="px-6 h-11 text-base font-semibold text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
               Learn More
             </Button>
           </div>
@@ -131,30 +143,30 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="relative z-10 container mx-auto px-4 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Why Choose <span className="text-primary">E-Consult</span>?
+      <section className="relative z-10 container mx-auto px-6 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 text-slate-900 dark:text-slate-100">
+            Why Choose <span className="text-indigo-600 dark:text-indigo-400">E-Consult</span>?
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
             Experience the future of professional consultations with our cutting-edge platform
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
             <Card 
               key={index} 
-              className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 bg-card/50 backdrop-blur-sm"
+              className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm"
             >
-              <CardContent className="p-8 text-center space-y-6">
-                <div className={`w-16 h-16 mx-auto rounded-2xl ${feature.bgColor} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                  <feature.icon className={`w-8 h-8 ${feature.color}`} />
+              <CardContent className="p-6 text-center space-y-4">
+                <div className={`w-12 h-12 mx-auto rounded-xl ${feature.bgColor} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                  <feature.icon className={`w-6 h-6 ${feature.color}`} />
                 </div>
-                <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   {feature.title}
                 </h3>
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                   {feature.description}
                 </p>
               </CardContent>
@@ -164,29 +176,29 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="relative z-10 container mx-auto px-4 py-20">
-        <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-0 backdrop-blur-sm">
-          <CardContent className="p-12 text-center">
+      <section className="relative z-10 container mx-auto px-6 py-16">
+        <Card className="bg-slate-100/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 backdrop-blur-sm">
+          <CardContent className="p-8 text-center">
             <div className="max-w-3xl mx-auto">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-slate-900 dark:text-slate-100">
                 Ready to Transform Your Professional Network?
               </h2>
-              <p className="text-xl text-muted-foreground mb-8">
+              <p className="text-base text-slate-600 dark:text-slate-400 mb-6">
                 Join thousands of professionals who trust E-Consult for their most important decisions
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button 
                   size="lg" 
                   onClick={() => navigate('/auth')}
-                  className="px-8 py-4 text-lg group hover:scale-105 transition-transform"
+                  className="px-6 h-11 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white transition-colors group"
                 >
                   Get Started Free
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="px-8 py-4 text-lg hover:scale-105 transition-transform"
+                  className="px-6 h-11 text-base font-semibold text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   Learn More
                 </Button>
@@ -197,8 +209,8 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 container mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400">
-        <p className="text-sm">&copy; 2025 E-Consult. All rights reserved.</p>
+      <footer className="relative z-10 container mx-auto px-6 py-6 text-center text-slate-500 dark:text-slate-400">
+        <p className="text-xs">&copy; 2025 E-Consult. All rights reserved.</p>
       </footer>
     </div>
   );

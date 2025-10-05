@@ -139,38 +139,38 @@ const Feed = () => {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto space-y-8">
-        <div className="text-center space-y-3">
-          <div className="h-10 bg-muted rounded w-96 mx-auto animate-pulse"></div>
-          <div className="h-6 bg-muted rounded w-80 mx-auto animate-pulse"></div>
+      <div className="max-w-4xl mx-auto space-y-6 p-4">
+        <div className="text-center space-y-2">
+          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-80 mx-auto animate-pulse"></div>
+          <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-64 mx-auto animate-pulse"></div>
         </div>
-        <div className="space-y-6">
+        <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className="border-l-4 border-l-muted animate-pulse">
-              <CardHeader className="pb-4">
-                <div className="space-y-4">
+            <Card key={i} className="border-l-4 border-l-slate-300 dark:border-l-slate-600 animate-pulse">
+              <CardHeader className="pb-3">
+                <div className="space-y-3">
                   <div className="flex items-start justify-between">
-                    <div className="h-6 bg-muted rounded w-24"></div>
-                    <div className="h-4 bg-muted rounded w-20"></div>
+                    <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-16"></div>
                   </div>
-                  <div className="h-8 bg-muted rounded w-3/4"></div>
+                  <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-muted rounded-full"></div>
+                      <div className="w-7 h-7 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
                       <div className="space-y-1">
-                        <div className="h-4 bg-muted rounded w-24"></div>
-                        <div className="h-3 bg-muted rounded w-20"></div>
+                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
+                        <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-16"></div>
                       </div>
                     </div>
-                    <div className="h-4 bg-muted rounded w-20"></div>
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-16"></div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded"></div>
-                  <div className="h-4 bg-muted rounded w-5/6"></div>
-                  <div className="h-4 bg-muted rounded w-2/3"></div>
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-5/6"></div>
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
                 </div>
               </CardContent>
             </Card>
@@ -181,70 +181,72 @@ const Feed = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <div className="text-center space-y-3">
-        <h1 className="text-4xl font-bold">Active Consultations</h1>
-        <p className="text-lg text-muted-foreground">
+    <div className="max-w-4xl mx-auto space-y-6 p-4">
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Active Consultations</h1>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           Explore ongoing discussions and share your insights
         </p>
       </div>
 
       {consultations.length === 0 ? (
-        <Card className="text-center py-16">
+        <Card className="text-center py-12">
           <CardContent>
-            <MessageSquare className="w-16 h-16 mx-auto mb-6 text-muted-foreground opacity-50" />
-            <h3 className="text-xl font-semibold mb-3">No active consultations</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            <MessageSquare className="w-12 h-12 mx-auto mb-4 text-slate-400 dark:text-slate-600 opacity-50" />
+            <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-slate-100">No active consultations</h3>
+            <p className="text-slate-600 dark:text-slate-400 mb-4 max-w-md mx-auto text-sm">
               Be the first to start a consultation and get expert advice from the community!
             </p>
             <Link
               to="/create"
-              className="inline-flex items-center px-6 py-3 btn-primary-gradient rounded-md hover:opacity-90 transition-opacity font-medium"
+              className="inline-flex items-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-slate-200 dark:text-slate-900 rounded-md transition-colors text-sm font-medium"
             >
-              <MessageSquare className="w-5 h-5 mr-2" />
+              <MessageSquare className="w-4 h-4 mr-2" />
               Create Consultation
             </Link>
           </CardContent>
         </Card>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {consultations.map((consultation) => (
             <Link key={consultation.id} to={`/consultation/${consultation.id}`} className="block">
-              <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary group">
-                <CardHeader className="pb-4">
-                  <div className="space-y-4">
+              <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-slate-500 dark:border-l-slate-400 group">
+                <CardHeader className="pb-3">
+                  <div className="space-y-3">
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <Badge variant="secondary" className="text-sm">{consultation.category}</Badge>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {consultation.category.split(', ').map((cat, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">{cat}</Badge>
+                        ))}
                       </div>
-                      <div className="text-sm font-medium text-muted-foreground">
+                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
                         {getTimeLeft(consultation.expires_at)}
                       </div>
                     </div>
                     
-                    <CardTitle className="text-2xl font-bold leading-tight group-hover:text-primary transition-colors">
+                    <CardTitle className="text-lg font-bold leading-tight group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors text-slate-900 dark:text-slate-100">
                       {consultation.title}
                     </CardTitle>
                     
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <Avatar className="w-8 h-8">
+                        <Avatar className="w-7 h-7">
                           <AvatarImage src={consultation.profiles?.avatar_url} />
-                          <AvatarFallback className="text-sm">
+                          <AvatarFallback className="text-xs">
                             {consultation.profiles?.display_name?.charAt(0) || 'U'}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium text-sm">{consultation.profiles?.display_name}</div>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <div className="font-medium text-xs text-slate-700 dark:text-slate-300">{consultation.profiles?.display_name}</div>
+                          <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                             <Clock className="w-3 h-3" />
                             {formatDistanceToNow(new Date(consultation.created_at), { addSuffix: true })}
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <MessageSquare className="w-4 h-4" />
+                      <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
+                        <MessageSquare className="w-3 h-3" />
                         <span className="font-medium">{consultation.comment_count}</span>
                         <span>comments</span>
                       </div>
@@ -253,7 +255,7 @@ const Feed = () => {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="prose prose-sm max-w-none">
-                    <p className="text-foreground line-clamp-3 leading-relaxed">
+                    <p className="text-slate-700 dark:text-slate-300 line-clamp-3 leading-relaxed text-sm">
                       {consultation.description}
                     </p>
                   </div>
