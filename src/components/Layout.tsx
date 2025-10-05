@@ -24,8 +24,19 @@ const Layout = ({ children }: LayoutProps) => {
   const { theme, setTheme } = useTheme();
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/'); // Redirect to the index (main) page
+    try {
+      await signOut();
+      // Force navigation and reload to ensure clean state
+      navigate('/', { replace: true });
+      // Small delay to ensure navigation completes
+      setTimeout(() => {
+        window.location.href = '/'; // Force page reload for complete state reset
+      }, 100);
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Force navigation even on error
+      navigate('/', { replace: true });
+    }
   };
 
   const navItems = [
