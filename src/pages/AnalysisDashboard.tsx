@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import SentimentLineChart from '@/components/SentimentLineChart';
@@ -15,6 +17,7 @@ interface SentimentDay {
 const AnalysisDashboard = () => {
   const { id: consultationId } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [consultations, setConsultations] = useState<any[]>([]);
   const [comments, setComments] = useState<any[]>([]);
@@ -109,7 +112,18 @@ const AnalysisDashboard = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">Analysis Dashboard</h1>
+      <div className="flex items-center gap-4 mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Analysis Dashboard</h1>
+      </div>
       {loading ? (
         <div className="animate-pulse h-32 bg-slate-200 dark:bg-slate-700 rounded" />
       ) : (
