@@ -18,6 +18,9 @@ export type Database = {
         Row: {
           consultation_id: string
           content: string
+          sentimenttype: string | null
+          score: number | null
+          keyword: string | null
           created_at: string
           id: string
           updated_at: string
@@ -26,6 +29,9 @@ export type Database = {
         Insert: {
           consultation_id: string
           content: string
+          sentimenttype?: string | null
+          score?: number | null
+          keyword?: string | null
           created_at?: string
           id?: string
           updated_at?: string
@@ -34,6 +40,9 @@ export type Database = {
         Update: {
           consultation_id?: string
           content?: string
+          sentimenttype?: string | null
+          score?: number | null
+          keyword?: string | null
           created_at?: string
           id?: string
           updated_at?: string

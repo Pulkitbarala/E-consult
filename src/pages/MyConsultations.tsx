@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageSquare, Clock, Plus, FileText, Edit, Eye, X } from 'lucide-react';
+import { MessageSquare, Clock, Plus, FileText, Edit, Eye, X, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -196,6 +196,16 @@ const MyConsultations = () => {
                       <Button variant="outline" size="sm" className="h-8 px-3 text-xs hover:bg-slate-100 transition-all duration-200">
                         <Eye className="w-3 h-3 mr-1" />
                         View
+                      </Button>
+                    </Link>
+                    <Link to={`/dashboard/${consultation.id}`}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 px-3 text-xs hover:bg-slate-100 transition-all duration-200"
+                      >
+                        <BarChart3 className="w-3 h-3 mr-1" />
+                        Analyze
                       </Button>
                     </Link>
                     {!showExpired && (

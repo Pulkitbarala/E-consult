@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Clock, User, MessageSquare, Send, Edit, Trash2, MoreHorizontal, Heart, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -39,6 +39,9 @@ interface Comment {
   };
   like_count?: number;
   liked_by_user?: boolean;
+  sentimenttype?: string | null;
+  score?: number | null;
+  keyword?: string | null;
 }
 
 const ConsultationDetail = () => {
@@ -141,7 +144,7 @@ const ConsultationDetail = () => {
     try {
       const { data: commentsData, error } = await supabase
         .from('comments')
-        .select('id, content, created_at, user_id')
+        .select('id, content, created_at, user_id, sentimenttype, score, keyword')
         .eq('consultation_id', id)
         .order('created_at', { ascending: true });
 
@@ -229,7 +232,7 @@ const ConsultationDetail = () => {
           // Fetch the complete comment with profile data
           const { data: commentData, error } = await supabase
             .from('comments')
-            .select('id, content, created_at, user_id')
+            .select('id, content, created_at, user_id, sentimenttype, score, keyword')
             .eq('id', payload.new.id)
             .single();
 
@@ -251,6 +254,13 @@ const ConsultationDetail = () => {
           };
 
           setComments(prev => [...prev, commentWithProfile]);
+
+          // If analysis fields are empty and it's our own comment, attempt to analyze now (fire-and-forget)
+          if (!commentData.sentimenttype && commentData.content && commentData.user_id === user?.id) {
+            import('@/integrations/analysis/commentAnalysisService')
+              .then(m => m.analyzeAndUpdateComment(commentData.id, commentData.content))
+              .catch(() => {/* ignore */});
+          }
         }
       )
       .subscribe();
@@ -266,13 +276,15 @@ const ConsultationDetail = () => {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data: inserted, error } = await supabase
         .from('comments')
         .insert({
           consultation_id: id!,
           content: newComment.trim(),
           user_id: user.id,
-        });
+        })
+        .select('id, content')
+        .single();
 
       if (error) throw error;
 
@@ -281,6 +293,13 @@ const ConsultationDetail = () => {
         title: 'Success!',
         description: 'Your comment has been posted.',
       });
+
+      // Fire-and-forget analysis call (does not block UI)
+      if (inserted?.id && inserted?.content) {
+        import('@/integrations/analysis/commentAnalysisService')
+          .then(m => m.analyzeAndUpdateComment(inserted.id, inserted.content))
+          .catch(() => {/* ignore */});
+      }
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -566,6 +585,93 @@ const ConsultationDetail = () => {
     return `${hours}h left`;
   };
 
+  // Export CSV handler extracted from inline button. Tries server function first, falls back to client-side CSV.
+  const handleExportCsv = async () => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = (sessionData as any)?.session?.access_token;
+      if (!token) {
+        toast({ title: 'Sign in required', description: 'Please sign in to export comments.' });
+        return;
+      }
+
+      const endpoint = import.meta.env.DEV
+        ? `/functions/v1/get-comments-csv?consultation_id=${consultation?.id}`
+        : `${SUPABASE_URL}/functions/v1/get-comments-csv?consultation_id=${consultation?.id}`;
+
+      let resp: Response | null = null;
+      try {
+        resp = await fetch(endpoint, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
+        });
+      } catch (networkErr) {
+        resp = null;
+      }
+
+      if (resp && resp.ok) {
+        const blob = await resp.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `consultation-${consultation?.id}-comments.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        toast({ title: 'Export started', description: 'CSV is downloading.' });
+        return;
+      }
+
+      if (!resp || resp.status === 404) {
+        if (!comments || comments.length === 0) {
+          toast({ title: 'No comments', description: 'There are no comments to export.' });
+          return;
+        }
+
+        const headers = ['id', 'content', 'created_at', 'user_id', 'author_display_name'];
+        const escape = (v: any) => {
+          const s = v == null ? '' : String(v);
+          const e = s.replace(/"/g, '""');
+          return /[",\n\r]/.test(e) ? `"${e}"` : e;
+        };
+
+        const lines = [headers.join(',')];
+        for (const c of comments) {
+          const row = [
+            escape(c.id),
+            escape(c.content),
+            escape(c.created_at),
+            escape(c.user_id),
+            escape(c.profiles?.display_name || ''),
+          ];
+          lines.push(row.join(','));
+        }
+
+        const csv = lines.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `consultation-${consultation?.id}-comments.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        toast({ title: 'Export started', description: 'CSV exported locally (client-side fallback).' });
+        return;
+      }
+
+      let errBody: any = {};
+      try { errBody = await resp.json(); } catch (e) { /* ignore */ }
+      const message = errBody?.error || `Request failed with status ${resp?.status}`;
+      throw new Error(message);
+    } catch (err: any) {
+      toast({ title: 'Export failed', description: err?.message || 'Failed to export comments', variant: 'destructive' });
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
@@ -692,6 +798,14 @@ const ConsultationDetail = () => {
         </CardContent>
       </Card>
 
+      {isOwner && (
+        <div className="flex justify-end mt-3 mb-1">
+          <Button variant="ghost" size="sm" onClick={handleExportCsv} className="border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
+            <span className="text-xs">Export CSV</span>
+          </Button>
+        </div>
+      )}
+
       <div className="space-y-6">
         <div className="flex items-center justify-between border-b pb-4">
           <h2 className="text-lg font-bold flex items-center gap-3 text-slate-900 dark:text-slate-100">
@@ -778,6 +892,22 @@ const ConsultationDetail = () => {
                         </div>
                         
                         <div className="flex items-center gap-3">
+                          {isOwner && comment.sentimenttype && (
+                            <Badge
+                              variant="secondary"
+                              className={
+                                `text-[10px] px-2 py-0.5 border-0 ` +
+                                (comment.sentimenttype?.toLowerCase() === 'positive'
+                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                  : comment.sentimenttype?.toLowerCase() === 'negative'
+                                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                  : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300')
+                              }
+                              title="Visible only to you as the consultation owner"
+                            >
+                              {String(comment.sentimenttype).charAt(0).toUpperCase() + String(comment.sentimenttype).slice(1)}
+                            </Badge>
+                          )}
                           <button 
                             className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors" 
                             onClick={() => toggleLike(comment.id)}

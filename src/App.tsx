@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "./hooks/useAuth";
 import Layout from "./components/Layout";
 import { useEffect, lazy, Suspense } from "react";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import AnalysisDashboard from './pages/AnalysisDashboard';
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,7 @@ const App = () => (
                 <Route path="/my-consultations" element={<AuthGuard><MyConsultations /></AuthGuard>} />
                 <Route path="/commented" element={<AuthGuard><CommentedConsultations /></AuthGuard>} />
                 <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
+                <Route path="/dashboard/:id" element={<AuthGuard><AnalysisDashboard /></AuthGuard>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
