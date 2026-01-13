@@ -7,8 +7,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, displayName: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string, captchaToken?: string | null) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, displayName: string, captchaToken?: string | null) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -70,12 +70,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, captchaToken?: string | null) => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          // Pass captcha token when bot protection is enabled
+          captchaToken: captchaToken || undefined,
+        },
       });
 
       if (error) {
@@ -104,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, displayName: string) => {
+  const signUp = async (email: string, password: string, displayName: string, captchaToken?: string | null) => {
     try {
       setLoading(true);
       // Use an environment variable for the auth redirect so we can point
@@ -119,6 +123,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: {
             display_name: displayName,
           },
+          // Pass captcha token when bot protection is enabled
+          captchaToken: captchaToken || undefined,
         },
       });
 
