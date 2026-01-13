@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, MessageSquare, User, Mail, Lock, Sparkles, Eye, EyeOff, Send } from 'lucide-react';
+import Turnstile from 'react-turnstile';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -49,10 +50,15 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
   const { signIn, signUp, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const turnstileSiteKey = (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined);
+  const captchaRequired = Boolean(turnstileSiteKey);
+  const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
 
   // Use a single form with conditional schema
   const form = useForm<AuthForm>({
@@ -90,6 +96,9 @@ const Auth = () => {
       setIsSettingNewPassword(true);
       setIsResetPassword(false);
       setIsSignUp(false);
+      // Reset captcha when switching flow
+      setCaptchaToken(null);
+      setCaptchaKey((k) => k + 1);
     }
   }, [location.search]);
 
@@ -118,7 +127,7 @@ const Auth = () => {
   const onSignIn = async (data: SignInForm) => {
     setLoading(true);
     try {
-      const { error } = await signIn(data.email, data.password);
+      const { error } = await signIn(data.email, data.password, captchaToken);
       if (!error) {
         // Redirect will be handled by useEffect
         const from = (location.state as any)?.from?.pathname || '/feed';
@@ -128,13 +137,16 @@ const Auth = () => {
       console.error('Login failed:', error);
     } finally {
       setLoading(false);
+      // Invalidate the used captcha token
+      setCaptchaToken(null);
+      setCaptchaKey((k) => k + 1);
     }
   };
 
   const onSignUp = async (data: SignUpForm) => {
     setLoading(true);
     try {
-      const { error } = await signUp(data.email, data.password, data.displayName);
+      const { error } = await signUp(data.email, data.password, data.displayName, captchaToken);
       if (!error) {
         // Show success message and switch to sign in
         setIsSignUp(false);
@@ -143,6 +155,9 @@ const Auth = () => {
       console.error('Sign up failed:', error);
     } finally {
       setLoading(false);
+      // Invalidate the used captcha token
+      setCaptchaToken(null);
+      setCaptchaKey((k) => k + 1);
     }
   };
 
@@ -151,6 +166,7 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${window.location.origin}/auth?reset=true`,
+        captchaToken: captchaToken || undefined,
       });
       
       if (error) {
@@ -175,6 +191,9 @@ const Auth = () => {
       });
     } finally {
       setLoading(false);
+      // Invalidate the used captcha token
+      setCaptchaToken(null);
+      setCaptchaKey((k) => k + 1);
     }
   };
 
@@ -234,12 +253,18 @@ const Auth = () => {
       password: '',
       ...(!isSignUp && { displayName: '' }),
     });
+    // Reset captcha when switching modes
+    setCaptchaToken(null);
+    setCaptchaKey((k) => k + 1);
   };
 
   const handleShowResetPassword = () => {
     setIsResetPassword(true);
     setIsSignUp(false);
     setIsSettingNewPassword(false);
+    // Reset captcha when switching flow
+    setCaptchaToken(null);
+    setCaptchaKey((k) => k + 1);
     // Pre-fill email if available
     const currentEmail = form.getValues('email');
     if (currentEmail) {
@@ -251,6 +276,9 @@ const Auth = () => {
     setIsResetPassword(false);
     setIsSignUp(false);
     setIsSettingNewPassword(false);
+    // Reset captcha
+    setCaptchaToken(null);
+    setCaptchaKey((k) => k + 1);
     // Always ensure we stay on the auth page when going back
     if (location.pathname !== '/auth') {
       navigate('/auth', { replace: true });
@@ -506,10 +534,39 @@ const Auth = () => {
                       )}
                     />
                     
+                    {/* Turnstile Captcha */}
+                    {captchaRequired && (
+                      <div className="flex justify-center py-2">
+                        <Turnstile
+                          key={captchaKey}
+                          sitekey={turnstileSiteKey!}
+                          onSuccess={(token) => setCaptchaToken(token)}
+                          onExpire={() => setCaptchaToken(null)}
+                          onLoad={() => console.info('Turnstile loaded (reset flow)')}
+                          onUnsupported={() => toast({ title: 'Captcha unsupported', description: 'Your browser does not support Turnstile.', variant: 'destructive' })}
+                          onError={(err) => {
+                            console.error('Turnstile error (reset):', err);
+                            setCaptchaToken(null);
+                            toast({
+                              title: 'Captcha failed to load',
+                              description: 'Allow challenges.cloudflare.com or try a different network.',
+                              variant: 'destructive',
+                            });
+                          }}
+                          theme={theme as any}
+                          size="flexible"
+                          appearance="always"
+                          execution="render"
+                          retry="auto"
+                          refreshExpired="auto"
+                        />
+                      </div>
+                    )}
+
                     <Button 
                       type="submit" 
                       className="w-full h-9 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white transition-colors" 
-                      disabled={loading}
+                      disabled={loading || (captchaRequired && !captchaToken)}
                     >
                       {loading ? (
                         <div className="flex items-center space-x-2">
@@ -626,10 +683,39 @@ const Auth = () => {
                     </div>
                   )}
                   
+                  {/* Turnstile Captcha */}
+                  {captchaRequired && (
+                    <div className="flex justify-center py-2">
+                      <Turnstile
+                        key={captchaKey}
+                        sitekey={turnstileSiteKey!}
+                        onSuccess={(token) => setCaptchaToken(token)}
+                        onExpire={() => setCaptchaToken(null)}
+                        onLoad={() => console.info('Turnstile loaded (auth flow)')}
+                        onUnsupported={() => toast({ title: 'Captcha unsupported', description: 'Your browser does not support Turnstile.', variant: 'destructive' })}
+                        onError={(err) => {
+                          console.error('Turnstile error (auth):', err);
+                          setCaptchaToken(null);
+                          toast({
+                            title: 'Captcha failed to load',
+                            description: 'Allow challenges.cloudflare.com or try a different network.',
+                            variant: 'destructive',
+                          });
+                        }}
+                        theme={theme as any}
+                        size="flexible"
+                        appearance="always"
+                        execution="render"
+                        retry="auto"
+                        refreshExpired="auto"
+                      />
+                    </div>
+                  )}
+
                   <Button 
                     type="submit" 
                     className="w-full h-9 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white transition-colors" 
-                    disabled={loading}
+                    disabled={loading || (captchaRequired && !captchaToken)}
                   >
                     {loading ? (
                       <div className="flex items-center space-x-2">
