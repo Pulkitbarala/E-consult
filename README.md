@@ -1,0 +1,2 @@
+# if anyuser commented and the consultation is expired show tag of expired on the card in commented page also and move them up to the page so that they remain seperate and easily accessable
+### next improvement

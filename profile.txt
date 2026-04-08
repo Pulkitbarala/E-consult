@@ -1,0 +1,33 @@
+[Full Name] — Senior Software Engineer
+Location: [City, Country] • Email: you@domain.com • GitHub: github.com/you • LinkedIn: linkedin.com/in/you • Website: yoursite.dev
+
+Summary
+Product-minded engineer with 8+ years building scalable web apps and APIs. Focused on developer experience, reliability, and measurable business outcomes. Comfortable across full-stack (React, TypeScript, Node, Postgres, Supabase) and shipping features end-to-end.
+
+Core strengths
+- System design & architecture • Scalability & performance tuning
+- Frontend: React, TypeScript, Vite/Next.js, component-driven design
+- Backend: Node, Express/Fastify, PostgreSQL, Supabase, REST & GraphQL
+- Cloud & infra: Docker, CI/CD, observability (Sentry, Prometheus)
+- Testing & automation: Jest, Playwright, integration testing
+- Mentorship, technical leadership, and cross-functional collaboration
+
+Selected achievements
+- Reduced page load by 45% via SSR, code-splitting, and image optimizations.
+- Launched a multi-tenant API for 100k+ MAU; improved average response time by 60%.
+- Led migration from monolith to microservices enabling 30% faster releases.
+
+Selected projects
+- ProjectName — Short 1-line description. Tech: React, TypeScript, Supabase. Link: https://...
+- OpenSourceLib — Library improving developer DX. 2k+ downloads/week. Link: https://...
+
+Education & certs
+- B.Sc. Computer Science — University Name
+- Relevant certs: AWS Certified Developer (optional)
+
+Availability & interests
+Open to senior engineering roles, contract work, and mentorship. Interests: developer tools, ML infra, real-time systems.
+
+Notes
+- Portfolio: https://yoursite.dev
+- Resume (PDF) available on request
