@@ -483,108 +483,58 @@ const AnalysisDashboard = () => {
           {aiMode && (
             <Card className="glass-card-pro bg-white/70 dark:bg-slate-800/60 border border-white/60 dark:border-white/10 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle>AI Chat</CardTitle>
+                <div className="flex flex-col gap-1">
+                  <CardTitle>AI Chat</CardTitle>
+                  <p className="text-xs text-slate-600 dark:text-slate-300">
+                    Ask about sentiment trends, top themes, or specific feedback.
+                  </p>
+                </div>
               </CardHeader>
               <CardContent>
                 <style>{`
                   .chatbot-loader {
-                    --core-color: #00f2ff;
-                    --orbit-1: #7000ff;
-                    --orbit-2: #00d4ff;
-                    position: relative;
-                    width: 36px;
-                    height: 36px;
                     display: inline-flex;
-                    justify-content: center;
                     align-items: center;
-                    perspective: 500px;
+                    gap: 4px;
+                    height: 12px;
                   }
 
-                  .chatbot-core {
-                    position: absolute;
-                    width: 8px;
-                    height: 8px;
-                    background: #ffffff;
+                  .chatbot-dot {
+                    width: 5px;
+                    height: 5px;
                     border-radius: 999px;
-                    box-shadow:
-                      0 0 8px var(--core-color),
-                      0 0 16px var(--core-color),
-                      0 0 24px var(--core-color);
-                    animation: chatbot-core-throb 1.5s infinite alternate ease-in-out;
+                    background: rgba(15, 23, 42, 0.55);
+                    animation: chatbot-dot 1s infinite ease-in-out;
                   }
 
-                  .chatbot-orbit {
-                    position: absolute;
-                    border-radius: 999px;
-                    border: 2px solid rgba(255, 255, 255, 0.12);
-                    box-sizing: border-box;
-                  }
+                  .chatbot-dot:nth-child(2) { animation-delay: 0.15s; }
+                  .chatbot-dot:nth-child(3) { animation-delay: 0.3s; }
 
-                  .chatbot-orbit-1 {
-                    width: 100%;
-                    height: 100%;
-                    border-top: 2px solid var(--orbit-1);
-                    animation: chatbot-rotate-3d-1 2s linear infinite;
-                  }
-
-                  .chatbot-orbit-2 {
-                    width: 82%;
-                    height: 82%;
-                    border-bottom: 2px solid var(--orbit-2);
-                    animation: chatbot-rotate-3d-2 1.5s linear infinite reverse;
-                  }
-
-                  .chatbot-orbit-3 {
-                    width: 64%;
-                    height: 64%;
-                    border-left: 2px solid #ffffff;
-                    opacity: 0.55;
-                    animation: chatbot-rotate-3d-3 1s linear infinite;
-                  }
-
-                  @keyframes chatbot-rotate-3d-1 {
-                    0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); }
-                    100% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); }
-                  }
-
-                  @keyframes chatbot-rotate-3d-2 {
-                    0% { transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg); }
-                    100% { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); }
-                  }
-
-                  @keyframes chatbot-rotate-3d-3 {
-                    0% { transform: rotateX(-35deg) rotateY(55deg) rotateZ(0deg); }
-                    100% { transform: rotateX(-35deg) rotateY(55deg) rotateZ(360deg); }
-                  }
-
-                  @keyframes chatbot-core-throb {
-                    from { transform: scale(0.8); opacity: 0.7; }
-                    to { transform: scale(1.3); opacity: 1; }
+                  @keyframes chatbot-dot {
+                    0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+                    40% { transform: translateY(-3px); opacity: 0.9; }
                   }
                 `}</style>
                 {/* Chat-like area */}
-                <div className="space-y-4">
+                <div className="space-y-4 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5">
                   {/* Chat log */}
-                  <div className="space-y-3">
+                  <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
                     {messages.map((m) => (
                       <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div
                           className={`max-w-[85%] rounded-lg border px-3 py-2 text-sm whitespace-pre-wrap ${
-                            m.status === 'thinking' ? 'w-[64px] h-[64px] px-2 py-2' : ''
+                            m.status === 'thinking' ? 'inline-flex items-center w-fit px-2.5 py-1 text-xs leading-none' : ''
                           } ${
                             m.role === 'user'
-                              ? 'bg-blue-600 text-white border-blue-600 dark:bg-blue-500 dark:border-blue-400'
-                              : 'bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100'
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-800'
                           }`}
                         >
                           {m.status === 'thinking' ? (
-                            <div className="flex items-center">
-                              <div className="chatbot-loader" aria-label="Thinking">
-                                <div className="chatbot-core" />
-                                <div className="chatbot-orbit chatbot-orbit-1" />
-                                <div className="chatbot-orbit chatbot-orbit-2" />
-                                <div className="chatbot-orbit chatbot-orbit-3" />
-                              </div>
+                            <div className="chatbot-loader" aria-label="Thinking">
+                              <span className="chatbot-dot" />
+                              <span className="chatbot-dot" />
+                              <span className="chatbot-dot" />
                             </div>
                           ) : (
                             <pre className="font-sans text-sm whitespace-pre-wrap">{m.content}</pre>
@@ -596,15 +546,17 @@ const AnalysisDashboard = () => {
 
                   {/* User question input */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <input
-                      className="w-full sm:flex-1 min-w-0 px-3 py-2 border rounded text-sm bg-white dark:bg-slate-800"
-                      placeholder="Ask a question…"
-                      value={aiQuestion}
-                      onChange={(e) => setAiQuestion(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !isAiBusy) runRagChat('qa', aiQuestion, aiQuestion);
-                      }}
-                    />
+                    <div className="relative flex-1">
+                      <input
+                        className="w-full min-w-0 px-3 py-2 border rounded text-sm bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        placeholder="Ask a question…"
+                        value={aiQuestion}
+                        onChange={(e) => setAiQuestion(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !isAiBusy) runRagChat('qa', aiQuestion, aiQuestion);
+                        }}
+                      />
+                    </div>
                     <Button
                       size="sm"
                       onClick={() => runRagChat('qa', aiQuestion, aiQuestion)}
