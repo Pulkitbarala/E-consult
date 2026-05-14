@@ -51,7 +51,7 @@ const AnalysisDashboard = () => {
   const messageIdRef = useRef(0);
   const typingTimerRef = useRef<number | null>(null);
   const [cloudWidth, setCloudWidth] = useState(0);
-  const MLAPI_URL = useMemo(() => (import.meta.env.VITE_MLAPI_URL as string | undefined) || 'http://127.0.0.1:8000', []);//https://api-ecs-1.onrender.com
+  const MLAPI_URL = useMemo(() => (import.meta.env.VITE_MLAPI_URL as string | undefined) || ' https://backer-dodge-carton.ngrok-free.dev', []);//https://api-ecs-1.onrender.com
   const SUMMARIZER_URL = useMemo(() => (import.meta.env.VITE_SUMMARIZER_URL as string | undefined) || 'https://chatbot-e-consult.vercel.app', []);//http://localhost:8081
   const fallbackCloudWidth = useMemo(() => Math.min(720, Math.max(320, window.innerWidth - 48)), []);
 
